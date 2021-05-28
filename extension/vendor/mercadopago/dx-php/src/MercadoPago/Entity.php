@@ -254,9 +254,9 @@ abstract class Entity
         self::$_manager->setEntityQueryJsonData($this);
         
         $response = self::$_manager->execute($this, 'post', $options);
-        /*echo "<pre>";
-        var_dump($response['body']);
-        echo "</pre>";*/
+        //echo "<pre>";
+        //var_dump($response['body']);
+        //echo "</pre>";
         if ($response['code'] == "200" || $response['code'] == "201") {            
             //echo $response['body']['id'];
             $this->_fillFromArray($this, $response['body']);            

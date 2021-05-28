@@ -9,6 +9,8 @@ use PHPMailer\PHPMailer\PHPMailer;
 class PagosController extends AppController {
     function __construct() {
         parent::__construct();
+        //credenciales de producción
+        //APP_USR-6451616915373368-042720-ef04fc5aafe98b8e389c9934055766a6-199806132
     }
     public function isGranted($action) {
         $this->permissions = ["success", "failure","pending"];
@@ -79,6 +81,7 @@ class PagosController extends AppController {
             exit();
         }
     }
+    /*-------------------------------------------------------*/
     private function createItems($usuario){
         $items = [];
         $historial = $usuario->getChildren("historial");
@@ -103,22 +106,6 @@ class PagosController extends AppController {
             Session::set("isEmail",false);        
         }
     }
-    public function success(){
-        $this->updateItems();
-        Session::set("msg",Session::msgSuccess("Pago Realizado"));
-        $this->redirect("success.php");
-    }
-    
-    public function failure(){
-        Session::set("msg",Session::msgDanger("Pago Fallido"));
-        $this->redirect("failure.php");
-    }
-    
-    public function pending(){
-        Session::set("msg",Session::msgInfo("Pago Pendiente"));
-        $this->redirect("pending.php");
-    }
-    
     private function createParameter(){
         $preference = new MercadoPago\Preference();
         $preference->back_urls = [
@@ -147,4 +134,47 @@ class PagosController extends AppController {
         $mail->Subject = 'Cobrando mediante via e-mail';
         return $mail;
     }
+    private function createPayment($id){
+        $payment = MercadoPago\Payment::find_by_id($id);
+        //$payment->payment_type = $type;
+        //$payment->installments = 1;
+        //$payment->description = "El cliente ya ha pagado";
+        return $payment;
+    }
+    /*-------------------------------------------------------*/
+    public function success(){
+        $this->updateItems();
+        $payid = $_GET["payment_id"];
+        //$paytype = $_GET["payment_type"];
+        MercadoPago\SDK::setAccessToken('TEST-6451616915373368-042720-2a5cde5a2a4020c3baf46fc94be461db-199806132');
+        $payment = $this->createPayment($payid, $paytype);
+        //$merchant = MercadoPago\MerchantOrder::find_by_id($_GET["merchant_order_id"]);
+        $payer = new MercadoPago\Payer();
+        $payer->first_name = "Juan Alberto";
+        $payer->last_name = "Ocampo";
+        $payer->email = "juanalocampo@gmail.com";
+        $payment->payer = $payer;
+        $payment->save();
+        //$preference = MercadoPago\Preference::find_by_id($_GET["preference_id"]);
+        //echo "<pre>";
+        //var_dump($payment);
+        //echo "</pre>";
+        //$merchant->save();
+        Session::set("msg",Session::msgSuccess("Pago Realizado"));
+        $this->redirect("success.php",[
+            "payment" => $payment
+        ]);
+    }
+    
+    public function failure(){
+        Session::set("msg",Session::msgDanger("Pago Fallido"));
+        $this->redirect("failure.php");
+    }
+    
+    public function pending(){
+        Session::set("msg",Session::msgInfo("Pago Pendiente"));
+        $this->redirect("pending.php");
+    }
+    
+    
 }
